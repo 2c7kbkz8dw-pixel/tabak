@@ -236,7 +236,6 @@
   (function() {
     const STORAGE_KEY = 'cigarette_counter_data';
 
-    // ---------- Работа с данными ----------
     function getDefaultData() { return {}; }
 
     function loadData() {
@@ -254,7 +253,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    // ---------- Даты ----------
     function getToday() {
       const d = new Date();
       return d.toISOString().split('T')[0];
@@ -281,15 +279,12 @@
       return new Date(year, month + 1, 0).getDate();
     }
 
-    // ---------- Состояние ----------
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth();
 
-    // Для модального окна
-    let editingDate = null;        // строка 'YYYY-MM-DD'
+    let editingDate = null;
     let editingValue = 0;
 
-    // ---------- Рендеринг ----------
     function render(data) {
       const today = getToday();
       document.getElementById('dateDisplay').textContent = formatDateDisplay(today);
@@ -315,7 +310,6 @@
         const isToday = (dateStr === today);
         const rowClass = isToday ? 'history-row today' : 'history-row';
         const emptyClass = (count === 0) ? ' empty-day' : '';
-        // Добавляем data-атрибут с датой для обработки клика
         html += `
           <div class="${rowClass}${emptyClass}" data-date="${dateStr}">
             <span class="day">${day}</span>
@@ -326,7 +320,6 @@
       container.innerHTML = html;
       totalEl.textContent = `Всего: ${total}`;
 
-      // Навешиваем обработчики клика на каждую строку
       container.querySelectorAll('.history-row').forEach(row => {
         row.addEventListener('click', function(e) {
           const dateStr = this.dataset.date;
@@ -335,7 +328,6 @@
       });
     }
 
-    // ---------- Изменение сегодняшнего дня (главные кнопки) ----------
     function changeTodayCount(delta) {
       const data = loadData();
       const today = getToday();
@@ -346,7 +338,6 @@
       render(data);
     }
 
-    // ---------- Навигация по месяцам ----------
     function changeMonth(offset) {
       currentMonth += offset;
       if (currentMonth < 0) {
@@ -360,7 +351,6 @@
       render(data);
     }
 
-    // ---------- Сброс ----------
     function resetAll() {
       if (confirm('Вы уверены, что хотите удалить всю историю?')) {
         const empty = getDefaultData();
@@ -369,13 +359,11 @@
       }
     }
 
-    // ---------- Редактор дня (модальное окно) ----------
     function openEditor(dateStr) {
       const data = loadData();
       editingDate = dateStr;
       editingValue = data[dateStr] || 0;
 
-      // Заполняем модалку
       document.getElementById('modalDate').textContent = formatDateDisplay(dateStr);
       const today = getToday();
       const label = dateStr === today ? 'сегодня' : (dateStr === getDateFromTodayOffset(-1) ? 'вчера' : '');
@@ -383,7 +371,6 @@
       document.getElementById('modalValue').textContent = editingValue;
       document.getElementById('modalInput').value = editingValue;
 
-      // Показываем окно
       document.getElementById('modalOverlay').classList.add('active');
     }
 
@@ -408,14 +395,12 @@
       render(data);
     }
 
-    // Вспомогательная функция для получения даты со смещением (для подписи "вчера")
     function getDateFromTodayOffset(offsetDays) {
       const d = new Date();
       d.setDate(d.getDate() + offsetDays);
       return d.toISOString().split('T')[0];
     }
 
-    // ---------- Инициализация ----------
     function init() {
       const data = loadData();
       const now = new Date();
@@ -423,17 +408,13 @@
       currentMonth = now.getMonth();
       render(data);
 
-      // Основные кнопки
       document.getElementById('incrementBtn').addEventListener('click', () => changeTodayCount(1));
       document.getElementById('decrementBtn').addEventListener('click', () => changeTodayCount(-1));
       document.getElementById('prevMonthBtn').addEventListener('click', () => changeMonth(-1));
       document.getElementById('nextMonthBtn').addEventListener('click', () => changeMonth(1));
       document.getElementById('resetBtn').addEventListener('click', resetAll);
 
-      // Модальное окно – управление
       const overlay = document.getElementById('modalOverlay');
-
-      // Закрытие по клику на фон
       overlay.addEventListener('click', function(e) {
         if (e.target === this) closeEditor();
       });
@@ -441,7 +422,6 @@
       document.getElementById('modalCloseBtn').addEventListener('click', closeEditor);
       document.getElementById('modalSaveBtn').addEventListener('click', saveEditor);
 
-      // Кнопки +/-
       document.getElementById('modalIncBtn').addEventListener('click', () => {
         updateEditorValue(editingValue + 1);
       });
@@ -449,7 +429,6 @@
         updateEditorValue(editingValue - 1);
       });
 
-      // Кнопка "Установить" из поля ввода
       document.getElementById('modalSetBtn').addEventListener('click', () => {
         const input = document.getElementById('modalInput');
         const val = parseInt(input.value, 10);
@@ -460,7 +439,6 @@
         }
       });
 
-      // При вводе в поле – обновляем значение при потере фокуса или Enter
       const modalInput = document.getElementById('modalInput');
       modalInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -476,7 +454,7 @@
         }
       });
 
-      // Регистрация Service Worker
+      // Регистрация Service Worker (относительный путь)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
           .then(() => console.log('SW registered'))
