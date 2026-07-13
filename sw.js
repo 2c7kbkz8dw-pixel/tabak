@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cigarette-counter-v8';
+const CACHE_NAME = 'cigarette-counter-v9';
 const urlsToCache = [
   './',
   './index.html',
@@ -24,7 +24,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Стратегия: index.html – сначала сеть, потом кеш
+// Для index.html – сначала сеть, потом кеш (чтобы дата всегда была свежая)
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (url.pathname === '/' || url.pathname === '/index.html') {
