@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#f5f0eb">
   <style>
-    /* Все стили без изменений – они такие же, как в предыдущих версиях */
+    /* Все стили без изменений (они рабочие) */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Roboto, system-ui, sans-serif; background: #f5f0eb; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 10px; }
     .container { background: white; max-width: 480px; width: 100%; padding: 20px 20px 30px; border-radius: 32px; box-shadow: 0 12px 40px rgba(0,0,0,0.1); text-align: center; margin-top: 10px; }
@@ -70,7 +70,7 @@
 </head>
 <body>
 <div class="container">
-  <!-- ДАТА – здесь она будет перезаписываться каждый раз -->
+  <!-- ДАТА – ОБЯЗАТЕЛЬНО ОБНОВЛЯЕТСЯ -->
   <div class="date" id="dateDisplay">Загрузка...</div>
 
   <div class="cigarette-icon">🚬</div>
@@ -98,7 +98,10 @@
   <div class="reset-area">
     <button class="reset-btn" id="resetBtn">🗑️ Сбросить всю статистику</button>
   </div>
-  <div class="debug-version">⏱️ загружено: <span id="loadTime"></span></div>
+  <!-- ОТЛАДКА: показывает текущую дату и время загрузки -->
+  <div class="debug-version">
+    📅 <span id="debugDate"></span> &nbsp;|&nbsp; ⏱️ <span id="loadTime"></span>
+  </div>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -127,6 +130,7 @@
     const STORAGE_KEY = 'cigarette_counter_data';
     const COLLAPSE_KEY = 'history_collapsed';
 
+    // ====== ДАННЫЕ ======
     function getDefaultData() { return {}; }
     function loadData() {
       try {
@@ -140,7 +144,7 @@
     }
     function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
-    // ---- ДАТА ----
+    // ====== ДАТА ======
     function getToday() {
       const d = new Date();
       return d.toISOString().split('T')[0];
@@ -171,7 +175,7 @@
     let editingDate = null;
     let editingValue = 0;
 
-    // ---- Сворачивание ----
+    // ====== СВОРАЧИВАНИЕ ======
     function loadCollapseState() {
       try { return localStorage.getItem(COLLAPSE_KEY) === 'true'; } catch(_) { return false; }
     }
@@ -197,23 +201,24 @@
       }
     }
 
-    // ---- ОСНОВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ ----
+    // ====== ОСНОВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ ======
     function render(data) {
       // 1. Получаем сегодняшнюю дату
       const today = getToday();
 
-      // 2. Обновляем элемент с датой (ЭТО ГЛАВНОЕ)
+      // 2. Обновляем дату вверху
       document.getElementById('dateDisplay').textContent = formatDateDisplay(today);
 
-      // 3. Счётчик
+      // 3. Обновляем отладочную строку (дата в формате YYYY-MM-DD + время)
+      document.getElementById('debugDate').textContent = today + ' (' + formatDateDisplay(today) + ')';
+      document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
+
+      // 4. Счётчик
       const todayCount = data[today] || 0;
       document.getElementById('counterValue').textContent = todayCount;
 
-      // 4. История
+      // 5. История
       renderMonthHistory(data, currentYear, currentMonth);
-
-      // 5. Время загрузки (для отладки)
-      document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
     }
 
     function renderMonthHistory(data, year, month) {
@@ -251,7 +256,7 @@
       applyCollapseState(isCollapsed);
     }
 
-    // ---- Изменение счётчика сегодня ----
+    // ====== ИЗМЕНЕНИЕ СЧЁТЧИКА ======
     function changeTodayCount(delta) {
       const data = loadData();
       const today = getToday();
@@ -262,7 +267,7 @@
       render(data);
     }
 
-    // ---- Навигация по месяцам ----
+    // ====== НАВИГАЦИЯ ПО МЕСЯЦАМ ======
     function changeMonth(offset) {
       currentMonth += offset;
       if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -271,7 +276,7 @@
       render(data);
     }
 
-    // ---- Сброс ----
+    // ====== СБРОС ======
     function resetAll() {
       if (confirm('Вы уверены, что хотите удалить всю историю?')) {
         saveData({});
@@ -279,7 +284,7 @@
       }
     }
 
-    // ---- Удаление дня ----
+    // ====== УДАЛЕНИЕ ДНЯ ======
     function deleteDay(dateStr) {
       if (!dateStr) return;
       if (!confirm(`Удалить запись за ${formatDateDisplay(dateStr)}?`)) return;
@@ -290,7 +295,7 @@
       render(data);
     }
 
-    // ---- Редактор ----
+    // ====== РЕДАКТОР ======
     function openEditor(dateStr) {
       const data = loadData();
       editingDate = dateStr;
@@ -322,18 +327,20 @@
       render(data);
     }
 
-    // ---- Автообновление при возвращении ----
+    // ====== АВТООБНОВЛЕНИЕ ПРИ ВОЗВРАЩЕНИИ ======
     function refreshOnFocus() {
       const data = loadData();
       render(data);
     }
 
-    // ---- Инициализация ----
+    // ====== ИНИЦИАЛИЗАЦИЯ ======
     function init() {
       const data = loadData();
       const now = new Date();
       currentYear = now.getFullYear();
       currentMonth = now.getMonth();
+
+      // Первый рендер
       render(data);
 
       // Кнопки
@@ -372,19 +379,23 @@
         else this.value = editingValue;
       });
 
-      // Автообновление
+      // Автообновление при возвращении
       function refresh() { refreshOnFocus(); }
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') refresh();
       });
       window.addEventListener('focus', refresh);
 
-      // Регистрация SW (если нужен)
-     // if ('serviceWorker' in navigator) {
-//   navigator.serviceWorker.register('sw.js')
-//     .then(() => console.log('SW registered'))
-//     .catch(err => console.warn('SW registration failed', err));
-// }
+      // ====== ВАЖНО: Service Worker ОТКЛЮЧЁН ======
+      // Регистрация SW закомментирована, чтобы не было ошибок
+      /*
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('SW registered'))
+          .catch(err => console.warn('SW registration failed', err));
+      }
+      */
+    }
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
