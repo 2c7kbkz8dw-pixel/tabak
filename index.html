@@ -37,7 +37,6 @@
     .controls .minus { background: #f0e3db; }
     .controls .plus { background: #d4c6b8; }
 
-    /* --- История --- */
     .history {
       margin-top: 28px;
       border-top: 2px dashed #ddd6ce;
@@ -81,7 +80,6 @@
       font-weight: 500;
       color: #2b1f16;
     }
-    /* Кнопка сворачивания */
     .collapse-btn {
       background: none;
       border: none;
@@ -136,7 +134,6 @@
     .reset-btn { background: none; border: 1px solid #ccc5bc; color: #6b5c4b; padding: 6px 18px; border-radius: 40px; font-size: 0.8rem; cursor: pointer; transition: 0.15s; }
     .reset-btn:hover { background: #ede7e1; }
 
-    /* --- Модальное окно --- */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -258,7 +255,6 @@
     <button class="plus" id="incrementBtn" aria-label="Увеличить">+</button>
   </div>
 
-  <!-- История -->
   <div class="history">
     <div class="history-header">
       <div class="month-nav">
@@ -279,7 +275,6 @@
   </div>
 </div>
 
-<!-- Модальное окно -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-date" id="modalDate">13 июля 2026</div>
@@ -439,7 +434,6 @@
         });
       });
 
-      // Применяем состояние свёрнутости после перерисовки
       const isCollapsed = loadCollapseState();
       applyCollapseState(isCollapsed);
     }
@@ -483,13 +477,13 @@
       if (!dateStr) return;
       if (!confirm(`Удалить запись за ${formatDateDisplay(dateStr)}?`)) return;
       const data = loadData();
-      delete data[dateStr];        // полностью удаляем ключ
+      delete data[dateStr];
       saveData(data);
       closeEditor();
       render(data);
     }
 
-    // ---------- Редактор дня (модальное окно) ----------
+    // ---------- Редактор дня ----------
     function openEditor(dateStr) {
       const data = loadData();
       editingDate = dateStr;
@@ -523,6 +517,12 @@
       data[editingDate] = editingValue;
       saveData(data);
       closeEditor();
+      render(data);
+    }
+
+    // ---------- Автообновление даты при возвращении ----------
+    function refreshOnFocus() {
+      const data = loadData();
       render(data);
     }
 
@@ -587,6 +587,17 @@
           this.value = editingValue;
         }
       });
+
+      // Автообновление при возвращении на страницу
+      function refresh() {
+        refreshOnFocus();
+      }
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          refresh();
+        }
+      });
+      window.addEventListener('focus', refresh);
 
       // Регистрация Service Worker
       if ('serviceWorker' in navigator) {
