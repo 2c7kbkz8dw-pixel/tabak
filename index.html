@@ -380,12 +380,11 @@
       window.addEventListener('focus', refresh);
 
       // Регистрация SW (если нужен)
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log('SW registered'))
-          .catch(err => console.warn('SW registration failed', err));
-      }
-    }
+     // if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('sw.js')
+//     .then(() => console.log('SW registered'))
+//     .catch(err => console.warn('SW registration failed', err));
+// }
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
