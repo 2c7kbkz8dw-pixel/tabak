@@ -1,11 +1,10 @@
-const CACHE_NAME = 'cigarette-counter-v1';
+const CACHE_NAME = 'cigarette-counter-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
-// Установка – кешируем файлы
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -14,7 +13,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Активация – удаляем старые кеши
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -26,7 +24,6 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Перехват запросов – отдаём из кеша или с сети
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
