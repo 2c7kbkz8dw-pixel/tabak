@@ -7,7 +7,6 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f0eb" />
   <style>
-    /* --- основные стили (без изменений) --- */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
@@ -38,15 +37,81 @@
     .controls .minus { background: #f0e3db; }
     .controls .plus { background: #d4c6b8; }
 
-    .history { margin-top: 28px; border-top: 2px dashed #ddd6ce; padding-top: 20px; }
-    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px; }
-    .history-header .month-nav { display: flex; gap: 16px; align-items: center; }
-    .history-header .month-nav button { background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #5f4d3a; padding: 0 6px; line-height: 1; transition: 0.1s; }
+    /* --- История --- */
+    .history {
+      margin-top: 28px;
+      border-top: 2px dashed #ddd6ce;
+      padding-top: 20px;
+    }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+      cursor: default;
+    }
+    .history-header .month-nav {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .history-header .month-nav button {
+      background: none;
+      border: none;
+      font-size: 1.6rem;
+      cursor: pointer;
+      color: #5f4d3a;
+      padding: 0 6px;
+      line-height: 1;
+      transition: 0.1s;
+    }
     .history-header .month-nav button:hover { color: #2d1f14; transform: scale(1.1); }
-    .history-header .month-label { font-weight: 600; font-size: 1.1rem; color: #3e2c1b; min-width: 120px; }
-    .history-header .month-total { font-size: 0.95rem; background: #e6ddd4; padding: 2px 16px; border-radius: 30px; font-weight: 500; color: #2b1f16; }
+    .history-header .month-label {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #3e2c1b;
+      min-width: 120px;
+    }
+    .history-header .month-total {
+      font-size: 0.95rem;
+      background: #e6ddd4;
+      padding: 2px 16px;
+      border-radius: 30px;
+      font-weight: 500;
+      color: #2b1f16;
+    }
+    /* Кнопка сворачивания */
+    .collapse-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #7f6e5c;
+      padding: 0 8px;
+      transition: transform 0.2s;
+      line-height: 1;
+    }
+    .collapse-btn:hover { color: #3e2c1b; }
+    .collapse-btn.collapsed { transform: rotate(-90deg); }
 
-    .history-days { display: flex; flex-direction: column; gap: 4px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
+    .history-days {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+      transition: max-height 0.25s ease, opacity 0.2s ease;
+    }
+    .history-days.collapsed {
+      max-height: 0 !important;
+      overflow: hidden;
+      opacity: 0;
+      padding: 0;
+      margin: 0;
+      gap: 0;
+    }
     .history-days::-webkit-scrollbar { width: 4px; }
     .history-days::-webkit-scrollbar-thumb { background: #ccc5bc; border-radius: 10px; }
 
@@ -71,7 +136,7 @@
     .reset-btn { background: none; border: 1px solid #ccc5bc; color: #6b5c4b; padding: 6px 18px; border-radius: 40px; font-size: 0.8rem; cursor: pointer; transition: 0.15s; }
     .reset-btn:hover { background: #ede7e1; }
 
-    /* --- Стили модального окна --- */
+    /* --- Модальное окно --- */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -96,17 +161,8 @@
     }
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 
-    .modal-date {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #3e2c1b;
-      margin-bottom: 6px;
-    }
-    .modal-day-label {
-      font-size: 0.9rem;
-      color: #7f6e5c;
-      margin-bottom: 14px;
-    }
+    .modal-date { font-size: 1.2rem; font-weight: 600; color: #3e2c1b; margin-bottom: 6px; }
+    .modal-day-label { font-size: 0.9rem; color: #7f6e5c; margin-bottom: 14px; }
     .modal-counter {
       display: flex;
       align-items: center;
@@ -156,31 +212,37 @@
       transition: 0.15s;
     }
     .modal-input-row input:focus { border-color: #b8a99a; }
+
     .modal-actions {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       justify-content: center;
+      flex-wrap: wrap;
       margin-top: 6px;
     }
     .modal-actions button {
-      padding: 8px 24px;
+      padding: 8px 18px;
       border: none;
       border-radius: 40px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 500;
       cursor: pointer;
       transition: 0.15s;
+      flex: 1 0 auto;
     }
     .modal-actions .save-btn { background: #d4c6b8; color: #2d241c; }
     .modal-actions .save-btn:active { background: #c0b0a0; }
     .modal-actions .close-btn { background: #e8e0d8; color: #4d3e2e; }
     .modal-actions .close-btn:active { background: #d6cdc3; }
+    .modal-actions .delete-btn { background: #f0d8d4; color: #8f3a33; }
+    .modal-actions .delete-btn:active { background: #e6c4be; }
 
     @media (max-width: 420px) {
       .container { padding: 16px; }
       .counter-value { font-size: 3.2rem; min-width: 80px; }
       .controls button { width: 54px; height: 54px; font-size: 2rem; }
       .modal { padding: 20px 16px; }
+      .modal-actions button { padding: 8px 14px; font-size: 0.85rem; }
     }
   </style>
 </head>
@@ -195,6 +257,8 @@
     <button class="minus" id="decrementBtn" aria-label="Уменьшить">−</button>
     <button class="plus" id="incrementBtn" aria-label="Увеличить">+</button>
   </div>
+
+  <!-- История -->
   <div class="history">
     <div class="history-header">
       <div class="month-nav">
@@ -202,16 +266,20 @@
         <span class="month-label" id="monthLabel">Июль 2026</span>
         <button id="nextMonthBtn" aria-label="Следующий месяц">▶</button>
       </div>
-      <span class="month-total" id="monthTotal">Всего: 0</span>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span class="month-total" id="monthTotal">Всего: 0</span>
+        <button class="collapse-btn" id="collapseToggle" aria-label="Свернуть/развернуть историю">▼</button>
+      </div>
     </div>
     <div class="history-days" id="historyContainer"></div>
   </div>
+
   <div class="reset-area">
     <button class="reset-btn" id="resetBtn">🗑️ Сбросить всю статистику</button>
   </div>
 </div>
 
-<!-- Модальное окно редактирования дня -->
+<!-- Модальное окно -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-date" id="modalDate">13 июля 2026</div>
@@ -227,6 +295,7 @@
     </div>
     <div class="modal-actions">
       <button class="save-btn" id="modalSaveBtn">💾 Сохранить</button>
+      <button class="delete-btn" id="modalDeleteBtn">🗑️ Удалить день</button>
       <button class="close-btn" id="modalCloseBtn">Закрыть</button>
     </div>
   </div>
@@ -235,7 +304,9 @@
 <script>
   (function() {
     const STORAGE_KEY = 'cigarette_counter_data';
+    const COLLAPSE_KEY = 'history_collapsed';
 
+    // ---------- Данные ----------
     function getDefaultData() { return {}; }
 
     function loadData() {
@@ -253,6 +324,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
+    // ---------- Даты ----------
     function getToday() {
       const d = new Date();
       return d.toISOString().split('T')[0];
@@ -279,12 +351,52 @@
       return new Date(year, month + 1, 0).getDate();
     }
 
+    function getDateFromTodayOffset(offsetDays) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return d.toISOString().split('T')[0];
+    }
+
+    // ---------- Состояние UI ----------
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth();
 
     let editingDate = null;
     let editingValue = 0;
 
+    // ---------- Сворачивание истории ----------
+    function loadCollapseState() {
+      try {
+        const val = localStorage.getItem(COLLAPSE_KEY);
+        return val === 'true';
+      } catch (_) { return false; }
+    }
+
+    function saveCollapseState(collapsed) {
+      localStorage.setItem(COLLAPSE_KEY, String(collapsed));
+    }
+
+    function toggleCollapse() {
+      const container = document.getElementById('historyContainer');
+      const btn = document.getElementById('collapseToggle');
+      const isCollapsed = container.classList.toggle('collapsed');
+      btn.classList.toggle('collapsed', isCollapsed);
+      saveCollapseState(isCollapsed);
+    }
+
+    function applyCollapseState(collapsed) {
+      const container = document.getElementById('historyContainer');
+      const btn = document.getElementById('collapseToggle');
+      if (collapsed) {
+        container.classList.add('collapsed');
+        btn.classList.add('collapsed');
+      } else {
+        container.classList.remove('collapsed');
+        btn.classList.remove('collapsed');
+      }
+    }
+
+    // ---------- Рендеринг ----------
     function render(data) {
       const today = getToday();
       document.getElementById('dateDisplay').textContent = formatDateDisplay(today);
@@ -326,8 +438,13 @@
           if (dateStr) openEditor(dateStr);
         });
       });
+
+      // Применяем состояние свёрнутости после перерисовки
+      const isCollapsed = loadCollapseState();
+      applyCollapseState(isCollapsed);
     }
 
+    // ---------- Изменение сегодняшнего дня ----------
     function changeTodayCount(delta) {
       const data = loadData();
       const today = getToday();
@@ -338,6 +455,7 @@
       render(data);
     }
 
+    // ---------- Навигация по месяцам ----------
     function changeMonth(offset) {
       currentMonth += offset;
       if (currentMonth < 0) {
@@ -351,6 +469,7 @@
       render(data);
     }
 
+    // ---------- Сброс всей статистики ----------
     function resetAll() {
       if (confirm('Вы уверены, что хотите удалить всю историю?')) {
         const empty = getDefaultData();
@@ -359,6 +478,18 @@
       }
     }
 
+    // ---------- Удаление дня ----------
+    function deleteDay(dateStr) {
+      if (!dateStr) return;
+      if (!confirm(`Удалить запись за ${formatDateDisplay(dateStr)}?`)) return;
+      const data = loadData();
+      delete data[dateStr];        // полностью удаляем ключ
+      saveData(data);
+      closeEditor();
+      render(data);
+    }
+
+    // ---------- Редактор дня (модальное окно) ----------
     function openEditor(dateStr) {
       const data = loadData();
       editingDate = dateStr;
@@ -395,12 +526,7 @@
       render(data);
     }
 
-    function getDateFromTodayOffset(offsetDays) {
-      const d = new Date();
-      d.setDate(d.getDate() + offsetDays);
-      return d.toISOString().split('T')[0];
-    }
-
+    // ---------- Инициализация ----------
     function init() {
       const data = loadData();
       const now = new Date();
@@ -408,12 +534,17 @@
       currentMonth = now.getMonth();
       render(data);
 
+      // Главные кнопки
       document.getElementById('incrementBtn').addEventListener('click', () => changeTodayCount(1));
       document.getElementById('decrementBtn').addEventListener('click', () => changeTodayCount(-1));
       document.getElementById('prevMonthBtn').addEventListener('click', () => changeMonth(-1));
       document.getElementById('nextMonthBtn').addEventListener('click', () => changeMonth(1));
       document.getElementById('resetBtn').addEventListener('click', resetAll);
 
+      // Сворачивание истории
+      document.getElementById('collapseToggle').addEventListener('click', toggleCollapse);
+
+      // Модальное окно
       const overlay = document.getElementById('modalOverlay');
       overlay.addEventListener('click', function(e) {
         if (e.target === this) closeEditor();
@@ -421,6 +552,9 @@
 
       document.getElementById('modalCloseBtn').addEventListener('click', closeEditor);
       document.getElementById('modalSaveBtn').addEventListener('click', saveEditor);
+      document.getElementById('modalDeleteBtn').addEventListener('click', function() {
+        if (editingDate) deleteDay(editingDate);
+      });
 
       document.getElementById('modalIncBtn').addEventListener('click', () => {
         updateEditorValue(editingValue + 1);
@@ -454,7 +588,7 @@
         }
       });
 
-      // Регистрация Service Worker (относительный путь)
+      // Регистрация Service Worker
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
           .then(() => console.log('SW registered'))
