@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f0eb" />
   <style>
-    /* --- все стили без изменений (опущены для краткости, но в полном файле они есть) --- */
+    /* --- все стили такие же, как были (опущены для краткости) --- */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
@@ -235,7 +235,6 @@
     .modal-actions .delete-btn { background: #f0d8d4; color: #8f3a33; }
     .modal-actions .delete-btn:active { background: #e6c4be; }
 
-    /* отладочная метка */
     .debug-version {
       font-size: 0.7rem;
       color: #aaa;
@@ -255,8 +254,8 @@
 </head>
 <body>
 <div class="container" id="app">
-  <!-- ДАТА ВВЕРХУ - ОНА БУДЕТ ОБНОВЛЯТЬСЯ -->
-  <div class="date" id="dateDisplay"></div>
+  <!-- ДАТА ВВЕРХУ – ОНА БУДЕТ ОБНОВЛЯТЬСЯ -->
+  <div class="date" id="dateDisplay">Загрузка...</div>
 
   <div class="cigarette-icon">🚬</div>
   <div class="counter">
@@ -286,8 +285,8 @@
     <button class="reset-btn" id="resetBtn">🗑️ Сбросить всю статистику</button>
   </div>
 
-  <!-- ОТЛАДОЧНАЯ МЕТКА – показывает время последнего обновления страницы -->
-  <div class="debug-version" id="debugVersion">⏱️ загружено: <span id="loadTime"></span></div>
+  <!-- ОТЛАДОЧНАЯ МЕТКА – показывает время последнего обновления -->
+  <div class="debug-version">⏱️ загружено: <span id="loadTime"></span></div>
 </div>
 
 <!-- Модальное окно -->
@@ -337,7 +336,7 @@
 
     // ---------- Даты ----------
     function getToday() {
-      const d = new Date();               // ← СИСТЕМНАЯ ДАТА ТЕЛЕФОНА
+      const d = new Date();               // ← всегда текущая дата телефона
       return d.toISOString().split('T')[0];
     }
 
@@ -404,21 +403,22 @@
       }
     }
 
-    // ---------- ГЛАВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ ДАТЫ ----------
+    // ---------- ГЛАВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ ----------
     function render(data) {
-      const today = getToday();  // ← всегда свежая дата
+      // 1. БЕРЁМ СВЕЖУЮ ДАТУ
+      const today = getToday();
 
-      // ОБНОВЛЯЕМ ДАТУ ВВЕРХУ (над сигаретой)
+      // 2. ОБНОВЛЯЕМ ДАТУ ВВЕРХУ (над сигаретой) – ЭТО ГЛАВНОЕ!
       document.getElementById('dateDisplay').textContent = formatDateDisplay(today);
 
-      // ОБНОВЛЯЕМ СЧЁТЧИК (для сегодня)
+      // 3. ОБНОВЛЯЕМ СЧЁТЧИК
       const todayCount = data[today] || 0;
       document.getElementById('counterValue').textContent = todayCount;
 
-      // ОБНОВЛЯЕМ ИСТОРИЮ МЕСЯЦА
+      // 4. ОБНОВЛЯЕМ ИСТОРИЮ
       renderMonthHistory(data, currentYear, currentMonth);
 
-      // ОБНОВЛЯЕМ ОТЛАДОЧНУЮ МЕТКУ (показывает время последнего рендера)
+      // 5. ОБНОВЛЯЕМ ВРЕМЯ ЗАГРУЗКИ (для отладки)
       document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
     }
 
@@ -552,7 +552,7 @@
       currentYear = now.getFullYear();
       currentMonth = now.getMonth();
 
-      // Первый рендер
+      // ПЕРВЫЙ РЕНДЕР
       render(data);
 
       // Кнопки
@@ -614,7 +614,7 @@
       });
       window.addEventListener('focus', refresh);
 
-      // Регистрация SW
+      // Регистрация SW (если нужен)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
           .then(() => console.log('SW registered'))
