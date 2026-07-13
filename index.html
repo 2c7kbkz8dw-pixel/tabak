@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f0eb" />
   <style>
-    /* --- основные стили (без изменений) --- */
+    /* --- все стили без изменений (опущены для краткости, но в полном файле они есть) --- */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
@@ -235,6 +235,15 @@
     .modal-actions .delete-btn { background: #f0d8d4; color: #8f3a33; }
     .modal-actions .delete-btn:active { background: #e6c4be; }
 
+    /* отладочная метка */
+    .debug-version {
+      font-size: 0.7rem;
+      color: #aaa;
+      margin-top: 12px;
+      border-top: 1px solid #eee;
+      padding-top: 8px;
+    }
+
     @media (max-width: 420px) {
       .container { padding: 16px; }
       .counter-value { font-size: 3.2rem; min-width: 80px; }
@@ -246,7 +255,9 @@
 </head>
 <body>
 <div class="container" id="app">
+  <!-- ДАТА ВВЕРХУ - ОНА БУДЕТ ОБНОВЛЯТЬСЯ -->
   <div class="date" id="dateDisplay"></div>
+
   <div class="cigarette-icon">🚬</div>
   <div class="counter">
     <span class="counter-value" id="counterValue">0</span>
@@ -274,8 +285,12 @@
   <div class="reset-area">
     <button class="reset-btn" id="resetBtn">🗑️ Сбросить всю статистику</button>
   </div>
+
+  <!-- ОТЛАДОЧНАЯ МЕТКА – показывает время последнего обновления страницы -->
+  <div class="debug-version" id="debugVersion">⏱️ загружено: <span id="loadTime"></span></div>
 </div>
 
+<!-- Модальное окно -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-date" id="modalDate">13 июля 2026</div>
@@ -322,7 +337,7 @@
 
     // ---------- Даты ----------
     function getToday() {
-      const d = new Date();
+      const d = new Date();               // ← СИСТЕМНАЯ ДАТА ТЕЛЕФОНА
       return d.toISOString().split('T')[0];
     }
 
@@ -360,18 +375,16 @@
     let editingDate = null;
     let editingValue = 0;
 
-    // ---------- Сворачивание истории ----------
+    // ---------- Сворачивание ----------
     function loadCollapseState() {
       try {
         const val = localStorage.getItem(COLLAPSE_KEY);
         return val === 'true';
       } catch (_) { return false; }
     }
-
     function saveCollapseState(collapsed) {
       localStorage.setItem(COLLAPSE_KEY, String(collapsed));
     }
-
     function toggleCollapse() {
       const container = document.getElementById('historyContainer');
       const btn = document.getElementById('collapseToggle');
@@ -379,7 +392,6 @@
       btn.classList.toggle('collapsed', isCollapsed);
       saveCollapseState(isCollapsed);
     }
-
     function applyCollapseState(collapsed) {
       const container = document.getElementById('historyContainer');
       const btn = document.getElementById('collapseToggle');
@@ -392,13 +404,22 @@
       }
     }
 
-    // ---------- Рендеринг ----------
+    // ---------- ГЛАВНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ ДАТЫ ----------
     function render(data) {
-      const today = getToday();
+      const today = getToday();  // ← всегда свежая дата
+
+      // ОБНОВЛЯЕМ ДАТУ ВВЕРХУ (над сигаретой)
       document.getElementById('dateDisplay').textContent = formatDateDisplay(today);
+
+      // ОБНОВЛЯЕМ СЧЁТЧИК (для сегодня)
       const todayCount = data[today] || 0;
       document.getElementById('counterValue').textContent = todayCount;
+
+      // ОБНОВЛЯЕМ ИСТОРИЮ МЕСЯЦА
       renderMonthHistory(data, currentYear, currentMonth);
+
+      // ОБНОВЛЯЕМ ОТЛАДОЧНУЮ МЕТКУ (показывает время последнего рендера)
+      document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
     }
 
     function renderMonthHistory(data, year, month) {
@@ -450,7 +471,7 @@
       render(data);
     }
 
-    // ---------- Навигация по месяцам ----------
+    // ---------- Навигация ----------
     function changeMonth(offset) {
       currentMonth += offset;
       if (currentMonth < 0) {
@@ -464,7 +485,7 @@
       render(data);
     }
 
-    // ---------- Сброс всей статистики ----------
+    // ---------- Сброс ----------
     function resetAll() {
       if (confirm('Вы уверены, что хотите удалить всю историю?')) {
         const empty = getDefaultData();
@@ -484,7 +505,7 @@
       render(data);
     }
 
-    // ---------- Редактор дня ----------
+    // ---------- Редактор ----------
     function openEditor(dateStr) {
       const data = loadData();
       editingDate = dateStr;
@@ -499,19 +520,16 @@
 
       document.getElementById('modalOverlay').classList.add('active');
     }
-
     function closeEditor() {
       document.getElementById('modalOverlay').classList.remove('active');
       editingDate = null;
     }
-
     function updateEditorValue(newVal) {
       newVal = Math.max(0, parseInt(newVal, 10) || 0);
       editingValue = newVal;
       document.getElementById('modalValue').textContent = editingValue;
       document.getElementById('modalInput').value = editingValue;
     }
-
     function saveEditor() {
       if (editingDate === null) return;
       const data = loadData();
@@ -521,7 +539,7 @@
       render(data);
     }
 
-    // ---------- Автообновление даты при возвращении ----------
+    // ---------- Автообновление при возвращении ----------
     function refreshOnFocus() {
       const data = loadData();
       render(data);
@@ -533,37 +551,34 @@
       const now = new Date();
       currentYear = now.getFullYear();
       currentMonth = now.getMonth();
+
+      // Первый рендер
       render(data);
 
-      // Главные кнопки
+      // Кнопки
       document.getElementById('incrementBtn').addEventListener('click', () => changeTodayCount(1));
       document.getElementById('decrementBtn').addEventListener('click', () => changeTodayCount(-1));
       document.getElementById('prevMonthBtn').addEventListener('click', () => changeMonth(-1));
       document.getElementById('nextMonthBtn').addEventListener('click', () => changeMonth(1));
       document.getElementById('resetBtn').addEventListener('click', resetAll);
-
-      // Сворачивание истории
       document.getElementById('collapseToggle').addEventListener('click', toggleCollapse);
 
-      // Модальное окно
+      // Модалка
       const overlay = document.getElementById('modalOverlay');
       overlay.addEventListener('click', function(e) {
         if (e.target === this) closeEditor();
       });
-
       document.getElementById('modalCloseBtn').addEventListener('click', closeEditor);
       document.getElementById('modalSaveBtn').addEventListener('click', saveEditor);
       document.getElementById('modalDeleteBtn').addEventListener('click', function() {
         if (editingDate) deleteDay(editingDate);
       });
-
       document.getElementById('modalIncBtn').addEventListener('click', () => {
         updateEditorValue(editingValue + 1);
       });
       document.getElementById('modalDecBtn').addEventListener('click', () => {
         updateEditorValue(editingValue - 1);
       });
-
       document.getElementById('modalSetBtn').addEventListener('click', () => {
         const input = document.getElementById('modalInput');
         const val = parseInt(input.value, 10);
@@ -573,7 +588,6 @@
           input.value = editingValue;
         }
       });
-
       const modalInput = document.getElementById('modalInput');
       modalInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -589,7 +603,7 @@
         }
       });
 
-      // Автообновление при возвращении на страницу
+      // --- АВТООБНОВЛЕНИЕ ПРИ ВОЗВРАЩЕНИИ ---
       function refresh() {
         refreshOnFocus();
       }
@@ -600,7 +614,7 @@
       });
       window.addEventListener('focus', refresh);
 
-      // Регистрация Service Worker
+      // Регистрация SW
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
           .then(() => console.log('SW registered'))
